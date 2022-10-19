@@ -176,17 +176,17 @@ func NewLogAnalyticsAdapter(route *router.Route) (router.LogAdapter, error) {
 	client := NewLogClient(workspaceID, workspaceSecret)
 
 	return &Adapter{
-		route:  route,
-		client: &client,
-		messageFilter: messageFilter
+		route:         route,
+		client:        &client,
+		messageFilter: messageFilter,
 	}, nil
 }
 
 // Adapter defines a logspout adapter for azure log analytics.
 type Adapter struct {
-	route	*router.Route
-	client	*LogClient
-	messageFilter	string
+	route         *router.Route
+	client        *LogClient
+	messageFilter string
 }
 
 // Stream waits on a logspout message channel. Upon receiving on it POSTs it to
@@ -195,6 +195,6 @@ func (adapter *Adapter) Stream(logstream chan *router.Message) {
 	for message := range logstream {
 		if ok, _ := regexp.MatchString(adapter.messageFilter, message.Data); ok {
 			adapter.client.PostMessage(message, time.Now().UTC())
-		}		
+		}
 	}
 }
