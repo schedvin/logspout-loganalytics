@@ -169,7 +169,7 @@ func NewLogAnalyticsAdapter(route *router.Route) (router.LogAdapter, error) {
 			fmt.Errorf("Workspace Id and secret not defined in environment variable '%s' and '%s'.\n", envWorkspaceID, envWorkspaceSecret)
 	}
 
-	if (messageFilter != "") {
+	if messageFilter != "" {
 		fmt.Printf("Filtering message using: %+v\n", messageFilter)
 	}
 
