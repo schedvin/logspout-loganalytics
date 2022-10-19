@@ -20,6 +20,7 @@ import (
 const (
 	envWorkspaceID       = "LOGANALYTICS_WORKSPACE_ID"
 	envWorkspaceSecret   = "LOGANALYTICS_WORKSPACE_SECRET"
+	envMessageFilter 		 = "LOGANALYTICS_MESSAGE_FILTER"
 	envIoTHubName        = "IOTEDGE_IOTHUBHOSTNAME"
 	envIoTHubDeviceID    = "IOTEDGE_DEVICEID"
 	envGatewayHostName   = "IOTEDGE_GATEWAYHOSTNAME"
@@ -152,8 +153,17 @@ func computeHmac256(message string, secret []byte) string {
 	return base64.StdEncoding.EncodeToString(h.Sum(nil))
 }
 
+func getEnvOrDefault(name, defaultIfEmpty string) string {
+	value := os.Getenv(name)
+	if value == "" {
+		value = defaultIfEmpty
+	}
+	return value
+}
+
 func NewLogAnalyticsAdapter(route *router.Route) (router.LogAdapter, error) {
-	workspaceID, workspaceSecret := os.Getenv(envWorkspaceID), os.Getenv(envWorkspaceSecret)
+	workspaceID, workspaceSecret, messageFilter := os.Getenv(envWorkspaceID), os.Getenv(envWorkspaceSecret), getEnvOrDefault(envMessageFilter, ".*?")
+
 	if workspaceID == "" || workspaceSecret == "" {
 		return nil,
 			fmt.Errorf("Workspace Id and secret not defined in environment variable '%s' and '%s'.\n", envWorkspaceID, envWorkspaceSecret)
@@ -164,19 +174,23 @@ func NewLogAnalyticsAdapter(route *router.Route) (router.LogAdapter, error) {
 	return &Adapter{
 		route:  route,
 		client: &client,
+		messageFilter: messageFilter
 	}, nil
 }
 
 // Adapter defines a logspout adapter for azure log analytics.
 type Adapter struct {
-	route  *router.Route
-	client *LogClient
+	route	*router.Route
+	client	*LogClient
+	messageFilter	string
 }
 
 // Stream waits on a logspout message channel. Upon receiving on it POSTs it to
 // Log Analytics endpoint.
 func (adapter *Adapter) Stream(logstream chan *router.Message) {
 	for message := range logstream {
-		adapter.client.PostMessage(message, time.Now().UTC())
+		if ok, _ := regexp.MatchString(adapter.messageFilter, message.Data); ok {
+			adapter.client.PostMessage(message, time.Now().UTC())
+		}		
 	}
 }
