@@ -20,7 +20,7 @@ import (
 const (
 	envWorkspaceID       = "LOGANALYTICS_WORKSPACE_ID"
 	envWorkspaceSecret   = "LOGANALYTICS_WORKSPACE_SECRET"
-	envMessageFilter 		 = "LOGANALYTICS_MESSAGE_FILTER"
+	envMessageFilter     = "LOGANALYTICS_MESSAGE_FILTER"
 	envIoTHubName        = "IOTEDGE_IOTHUBHOSTNAME"
 	envIoTHubDeviceID    = "IOTEDGE_DEVICEID"
 	envGatewayHostName   = "IOTEDGE_GATEWAYHOSTNAME"
@@ -167,6 +167,10 @@ func NewLogAnalyticsAdapter(route *router.Route) (router.LogAdapter, error) {
 	if workspaceID == "" || workspaceSecret == "" {
 		return nil,
 			fmt.Errorf("Workspace Id and secret not defined in environment variable '%s' and '%s'.\n", envWorkspaceID, envWorkspaceSecret)
+	}
+
+	if (messageFilter != "") {
+		fmt.Printf("Filtering message using: %+v\n", messageFilter)
 	}
 
 	client := NewLogClient(workspaceID, workspaceSecret)
